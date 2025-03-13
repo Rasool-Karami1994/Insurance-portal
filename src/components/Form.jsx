@@ -1,35 +1,56 @@
 import React, { useState } from "react";
 import DynamicForm from "./DynamicForm";
 import { useFetchFormStructure } from "../hooks/useApi";
-import { useSelector } from "react-redux";
 import DynamicTable from "./DynamicTable";
+import { ToastContainer, toast } from "react-toastify";
 
 const FormManager = () => {
   const [selectedForm, setSelectedForm] = useState(null);
   const [showTable, setShowTable] = useState(null);
-
-  const submissions = useSelector((state) => state?.insurance);
-  console.log(submissions);
+  const showToastMessage = (text, type) => {
+    type === "success"
+      ? toast.success(`${text}`, {
+          position: "top-left",
+          theme: localStorage.theme === "dark" ? "dark" : "light",
+        })
+      : toast.error(`${text}`, {
+          position: "top-left",
+          theme: localStorage.theme === "dark" ? "dark" : "light",
+        });
+  };
   const { data: formStructure, isLoading, isError } = useFetchFormStructure();
-  if (isLoading) return <div>Loading form...</div>;
-  if (isError)
+  if (isLoading)
+    return (
+      <div className="loader w-12 h-12 border-4 border-t-4 border-sky-500 rounded-full animate-spin m-5"></div>
+    );
+  if (isError) {
+    showToastMessage(
+      "Error loading form structure. Please try again later.",
+      "error"
+    );
     return <div>Error loading form structure. Please try again later.</div>;
+  }
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Smart Insurance Portal</h1>
+    <div className="container mx-auto p-6 my-5">
+      <ToastContainer />
 
-      {/* Form Selector */}
       <div className="mb-6">
-        <label htmlFor="formSelector" className="block text-gray-700 mb-2">
-          Select a Form to Fill:
+        <label
+          htmlFor="formSelector"
+          className="block text-gray-500 mb-2 dark:text-gray-400"
+        >
+          Please select a form to get started.
         </label>
         <select
           id="formSelector"
-          className="border border-gray-300 rounded p-2 w-full"
-          onChange={(e) => setSelectedForm(e.target.value)}
+          className="block text-gray-400 border border-gray-300 rounded w-full py-2 px-3 shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+          onChange={(e) => {
+            setSelectedForm(e.target.value);
+            setShowTable(null);
+          }}
         >
-          <option value="">-- Select a Form --</option>
+          <option value="">Choose your insurance</option>
           {formStructure.map((form) => (
             <option key={form.formId} value={form.formId}>
               {form.title}
@@ -38,7 +59,6 @@ const FormManager = () => {
         </select>
       </div>
 
-      {/* Dynamic Form */}
       {selectedForm && !showTable ? (
         <DynamicForm
           formId={selectedForm}
@@ -46,13 +66,10 @@ const FormManager = () => {
           isLoading={isLoading}
           isError={isError}
           setShowTable={setShowTable}
+          showToastMessage={showToastMessage}
         />
-      ) : (
-        <div className="text-gray-500">
-          Please select a form to get started.
-        </div>
-      )}
-      {showTable ? <DynamicTable /> : null}
+      ) : null}
+      {showTable ? <DynamicTable showToastMessage={showToastMessage} /> : null}
     </div>
   );
 };

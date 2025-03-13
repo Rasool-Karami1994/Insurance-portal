@@ -8,20 +8,11 @@ const DynamicForm = ({
   isError,
   isLoading,
   setShowTable,
+  showToastMessage,
 }) => {
   const [formFields, setFormFields] = useState([]);
   const [conditionalVisibility, setConditionalVisibility] = useState({});
   const mutation = useSubmitForm();
-  const [formState, setFormState] = useState();
-
-  useEffect(() => {
-    const savedData = JSON.parse(localStorage.getItem("formData"));
-    if (savedData) setFormState(savedData);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("formData", JSON.stringify(formState));
-  }, [formState]);
 
   useEffect(() => {
     if (formStructure) {
@@ -30,34 +21,32 @@ const DynamicForm = ({
     }
   }, [formStructure, formId]);
 
-  // Formik setup
   const formik = useFormik({
-    initialValues: {}, // Populated dynamically
-    validationSchema: Yup.object({}), // Populated dynamically
+    initialValues: {},
+    validationSchema: Yup.object({}),
     onSubmit: async (values) => {
       try {
         console.log(values);
         const response = await mutation.mutateAsync(values);
         console.log(response);
         setShowTable(true);
-        formik.resetForm(); // ریست فرم بعد از ارسال
+        formik.resetForm();
+        showToastMessage("Form submited successfully", "success");
       } catch (error) {
         console.error("Error submitting form:", error);
+        showToastMessage("Error submitting form", "error");
       }
     },
   });
 
-  // Dynamically populate initialValues and validationSchema
   useEffect(() => {
     if (formFields.length > 0) {
       const initialValues = {};
       const validationRules = {};
 
       formFields.forEach((field) => {
-        // Set default values
         initialValues[field.id] = "";
 
-        // Add validation if required
         if (field.required) {
           switch (field.type) {
             case "number":
@@ -84,7 +73,6 @@ const DynamicForm = ({
           }
         }
 
-        // Handle conditional fields
         if (field.visibility) {
           setConditionalVisibility((prev) => ({
             ...prev,
@@ -98,7 +86,6 @@ const DynamicForm = ({
     }
   }, [formFields]);
 
-  // Handle visibility logic for conditional fields
   const handleConditionalVisibility = (fieldId, value) => {
     formFields.forEach((field) => {
       if (field.visibility && field.visibility.dependsOn === fieldId) {
@@ -110,7 +97,7 @@ const DynamicForm = ({
           [field.id]: isVisible,
         }));
         if (!isVisible) {
-          formik.setFieldValue(field.id, ""); // Clear the field value if it's hidden
+          formik.setFieldValue(field.id, "");
         }
       }
     });
@@ -118,34 +105,48 @@ const DynamicForm = ({
 
   if (isLoading) return <div>Loading form...</div>;
   if (isError)
-    return <div>Error loading form structure. Please try again later.</div>;
+    return (
+      <div className="loader w-12 h-12 border-4 border-t-4 border-sky-500 rounded-full animate-spin m-5"></div>
+    );
 
   return (
-    <form onSubmit={formik.handleSubmit} className="p-6 space-y-4">
-      <h2 className="text-xl font-bold mb-4">{formId.replace("_", " ")}</h2>
+    <form
+      onSubmit={formik.handleSubmit}
+      className="p-6 space-y-4 bg-gray-100 dark:bg-gray-700 rounded-2xl"
+    >
+      <h2 className="text-xl font-bold  text-gray-500 dark:text-gray-400 my-4 mb-8 opacity-80">
+        {formId.replace("_", " ")}
+      </h2>
       {formFields.map((field) => {
-        if (field.visibility && !conditionalVisibility[field.id]) return null; // Skip hidden fields
+        if (field.visibility && !conditionalVisibility[field.id]) return null;
 
         switch (field.type) {
           case "radio":
             return (
-              <div key={field.id} className="mb-4">
-                <label className="block text-gray-700">{field.label}</label>
-                {field.options.map((option, index) => (
-                  <div key={index}>
-                    <input
-                      type="radio"
-                      name={field.id}
-                      value={option}
-                      checked={formik.values[field.id] === option}
-                      onChange={(e) => {
-                        formik.handleChange(e);
-                        handleConditionalVisibility(field.id, e.target.value);
-                      }}
-                    />
-                    <label className="ml-2">{option}</label>
-                  </div>
-                ))}
+              <div
+                key={field.id}
+                className="mb-4 textext-gray-400 dark:text-gray-300 "
+              >
+                <label className="block text-gray-400 dark:text-gray-300 mb-2">
+                  {field.label}
+                </label>
+                <div className="flex justify-items-start gap-4 items-center text-gray-400 dark:text-gray-300">
+                  {field.options.map((option, index) => (
+                    <div key={index} class="w-20">
+                      <input
+                        type="radio"
+                        name={field.id}
+                        value={option}
+                        checked={formik.values[field.id] === option}
+                        onChange={(e) => {
+                          formik.handleChange(e);
+                          handleConditionalVisibility(field.id, e.target.value);
+                        }}
+                      />
+                      <label className="ml-2">{option}</label>
+                    </div>
+                  ))}
+                </div>
                 {formik.errors[field.id] && formik.touched[field.id] && (
                   <div className="text-red-500">{formik.errors[field.id]}</div>
                 )}
@@ -155,7 +156,9 @@ const DynamicForm = ({
           case "select":
             return (
               <div key={field.id} className="mb-4">
-                <label className="block text-gray-700">{field.label}</label>
+                <label className="block text-gray-400 mb-2 dark:text-gray-300">
+                  {field.label}
+                </label>
                 <select
                   name={field.id}
                   value={formik.values[field.id]}
@@ -163,11 +166,17 @@ const DynamicForm = ({
                     formik.handleChange(e);
                     handleConditionalVisibility(field.id, e.target.value);
                   }}
-                  className="border border-gray-300 rounded p-2 w-full"
+                  className="border border-gray-300 rounded p-2 w-full text-gray-400 dark:text-gray-300"
                 >
-                  <option value="">Select an option</option>
+                  <option value="" className="text-gray-400 dark:text-gray-300">
+                    Select an option
+                  </option>
                   {field.options.map((option, index) => (
-                    <option key={index} value={option}>
+                    <option
+                      key={index}
+                      value={option}
+                      className="text-gray-400 dark:text-gray-300"
+                    >
                       {option}
                     </option>
                   ))}
@@ -181,9 +190,14 @@ const DynamicForm = ({
           case "checkbox":
             return (
               <div key={field.id} className="mb-4">
-                <label className="block text-gray-700">{field.label}</label>
+                <label className="block text-gray-400 mb-2 dark:text-gray-300">
+                  {field.label}
+                </label>
                 {field.options.map((option, index) => (
-                  <div key={index}>
+                  <div
+                    key={index}
+                    className="text-gray-400 dark:text-gray-300 py-1.5"
+                  >
                     <input
                       type="checkbox"
                       name={`${field.id}.${option}`}
@@ -202,10 +216,12 @@ const DynamicForm = ({
                 key={field.id}
                 className="border border-gray-300 p-4 rounded"
               >
-                <legend className="text-lg font-bold">{field.label}</legend>
+                <legend className="text-lg font-bold text-gray-500 mb-2 dark:text-gray-400 opacity-60">
+                  {field.label}
+                </legend>
                 {field.fields.map((subField) => (
                   <div key={subField.id} className="mb-4">
-                    <label className="block text-gray-700">
+                    <label className="block text-gray-400 mb-2 dark:text-gray-300">
                       {subField.label}
                     </label>
                     <input
@@ -226,7 +242,7 @@ const DynamicForm = ({
       })}
       <button
         type="submit"
-        className="bg-blue-500 text-white py-2 px-4 rounded"
+        className="bg-sky-500 text-white py-2 px-4 rounded my-5 w-full cursor-pointer"
       >
         Submit
       </button>

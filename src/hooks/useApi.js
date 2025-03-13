@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useMutation, useQuery } from "react-query";
 
-const apiUrl = "https://assignment.devotel.io/api/insurance"; // URL پایه API
+const apiUrl = "https://assignment.devotel.io/api/insurance"; 
 
 const fetchFormStructure = async () => {
   const { data } = await axios.get(`${apiUrl}/forms`);
