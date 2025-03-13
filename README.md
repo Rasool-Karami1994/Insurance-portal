@@ -43,7 +43,7 @@ POST /api/insurance/forms/submit: Submits the form data.
 
 GET /api/insurance/forms/submissions: Retrieves submitted applications.
 
-License
-This project is licensed under the MIT License. Feel free to use and modify it.
+## `You can see live demo from here:` https://rasool-devotel-insurance-portal.netlify.app/
 
-This version is concise, clear, and neatly structured, making it ideal for a GitHub repository. Let me know if there’s anything else you’d like to include! 🚀
+
+
