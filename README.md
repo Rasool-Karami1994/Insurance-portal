@@ -1,12 +1,49 @@
-# React + Vite
+Dynamic Smart Insurance Form
+A React.js application for dynamically generating and submitting insurance forms with advanced features such as autosave drafts, conditional field visibility, and a customizable submissions table view.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Features
+Dynamic Forms: Forms are fetched from APIs and rendered with conditional logic.
 
-Currently, two official plugins are available:
+Autosave Drafts: Automatically saves user input in localStorage and restores drafts when revisiting.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Customizable Table View: Allows sorting, filtering, and column selection for submitted applications.
 
-## Expanding the ESLint configuration
+Dark Mode Support: User-friendly, responsive design with light and dark themes.
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Form Validation: Real-time validation powered by Formik and Yup.
+
+Technologies
+React.js for the user interface.
+
+Tailwind CSS for styling.
+
+Formik and Yup for form handling and validation.
+
+React Query for API data management.
+
+Axios for API calls.
+
+Getting Started
+Clone the repository:
+
+bash
+git clone https://github.com/Rasool-Karami1994/Insurance-portal.git
+Install dependencies:
+
+bash
+npm install
+Start the development server:
+
+bash
+npm run dev
+API Endpoints
+GET /api/insurance/forms: Fetches form structure.
+
+POST /api/insurance/forms/submit: Submits the form data.
+
+GET /api/insurance/forms/submissions: Retrieves submitted applications.
+
+License
+This project is licensed under the MIT License. Feel free to use and modify it.
+
+This version is concise, clear, and neatly structured, making it ideal for a GitHub repository. Let me know if there’s anything else you’d like to include! 🚀
