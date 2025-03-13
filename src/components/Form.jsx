@@ -1,10 +1,15 @@
 import React, { useState } from "react";
 import DynamicForm from "./DynamicForm";
-import { useFetchFormStructure } from "../hooks/useFetchFormStructure";
+import { useFetchFormStructure } from "../hooks/useApi";
+import { useSelector } from "react-redux";
+import DynamicTable from "./DynamicTable";
 
 const FormManager = () => {
   const [selectedForm, setSelectedForm] = useState(null);
+  const [showTable, setShowTable] = useState(null);
 
+  const submissions = useSelector((state) => state?.insurance);
+  console.log(submissions);
   const { data: formStructure, isLoading, isError } = useFetchFormStructure();
   if (isLoading) return <div>Loading form...</div>;
   if (isError)
@@ -34,13 +39,20 @@ const FormManager = () => {
       </div>
 
       {/* Dynamic Form */}
-      {selectedForm ? (
-        <DynamicForm formId={selectedForm} />
+      {selectedForm && !showTable ? (
+        <DynamicForm
+          formId={selectedForm}
+          formStructure={formStructure}
+          isLoading={isLoading}
+          isError={isError}
+          setShowTable={setShowTable}
+        />
       ) : (
         <div className="text-gray-500">
           Please select a form to get started.
         </div>
       )}
+      {showTable ? <DynamicTable /> : null}
     </div>
   );
 };

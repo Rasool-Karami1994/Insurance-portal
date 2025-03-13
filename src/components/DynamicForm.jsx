@@ -1,16 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useFetchFormStructure } from "../hooks/useFetchFormStructure";
-
-const DynamicForm = ({ formId }) => {
+import { useSubmitForm } from "../hooks/useApi";
+const DynamicForm = ({
+  formId,
+  formStructure,
+  isError,
+  isLoading,
+  setShowTable,
+}) => {
   const [formFields, setFormFields] = useState([]);
   const [conditionalVisibility, setConditionalVisibility] = useState({});
+  const mutation = useSubmitForm();
+  const [formState, setFormState] = useState();
 
-  // Fetch dynamic form data from API
-  const { data: formStructure, isLoading, isError } = useFetchFormStructure();
+  useEffect(() => {
+    const savedData = JSON.parse(localStorage.getItem("formData"));
+    if (savedData) setFormState(savedData);
+  }, []);
 
-  // Filter fields for the selected formId (e.g., "home_insurance_application")
+  useEffect(() => {
+    localStorage.setItem("formData", JSON.stringify(formState));
+  }, [formState]);
+
   useEffect(() => {
     if (formStructure) {
       const form = formStructure.find((form) => form.formId === formId);
@@ -22,8 +34,16 @@ const DynamicForm = ({ formId }) => {
   const formik = useFormik({
     initialValues: {}, // Populated dynamically
     validationSchema: Yup.object({}), // Populated dynamically
-    onSubmit: (values) => {
-      console.log("Form submitted:", values);
+    onSubmit: async (values) => {
+      try {
+        console.log(values);
+        const response = await mutation.mutateAsync(values);
+        console.log(response);
+        setShowTable(true);
+        formik.resetForm(); // ریست فرم بعد از ارسال
+      } catch (error) {
+        console.error("Error submitting form:", error);
+      }
     },
   });
 
