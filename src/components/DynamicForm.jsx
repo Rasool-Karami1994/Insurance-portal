@@ -13,7 +13,7 @@ const DynamicForm = ({
   const [formFields, setFormFields] = useState([]);
   const [conditionalVisibility, setConditionalVisibility] = useState({});
   const mutation = useSubmitForm();
-
+  const DRAFT_KEY = `draft_${formId}`;
   useEffect(() => {
     if (formStructure) {
       const form = formStructure.find((form) => form.formId === formId);
@@ -31,6 +31,7 @@ const DynamicForm = ({
         console.log(response);
         setShowTable(true);
         formik.resetForm();
+        localStorage.removeItem(DRAFT_KEY);
         showToastMessage("Form submited successfully", "success");
       } catch (error) {
         console.error("Error submitting form:", error);
@@ -38,6 +39,70 @@ const DynamicForm = ({
       }
     },
   });
+
+  useEffect(() => {
+    const loadDraft = () => {
+      const draft = localStorage.getItem(DRAFT_KEY);
+      if (draft) {
+        const parsedDraft = JSON.parse(draft);
+        formik.setValues(parsedDraft);
+      }
+    };
+
+    if (formFields.length > 0) {
+      const initialValues = {};
+      const validationRules = {};
+
+      formFields.forEach((field) => {
+        initialValues[field.id] = "";
+
+        if (field.required) {
+          switch (field.type) {
+            case "number":
+              validationRules[field.id] = Yup.number().required(
+                `${field.label} is required`
+              );
+              break;
+            case "text":
+              validationRules[field.id] = Yup.string().required(
+                `${field.label} is required`
+              );
+              break;
+            case "select":
+              validationRules[field.id] = Yup.string().required(
+                `${field.label} is required`
+              );
+              break;
+            default:
+              validationRules[field.id] = Yup.string().required(
+                `${field.label} is required`
+              );
+          }
+        }
+
+        if (field.visibility) {
+          setConditionalVisibility((prev) => ({
+            ...prev,
+            [field.id]: false,
+          }));
+        }
+      });
+
+      formik.initialValues = initialValues;
+      formik.validationSchema = Yup.object(validationRules);
+
+      loadDraft();
+    }
+  }, [formFields]);
+
+  useEffect(() => {
+    const saveDraft = () => {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(formik.values));
+    };
+
+    const timeoutId = setTimeout(saveDraft, 500);
+    return () => clearTimeout(timeoutId);
+  }, [formik.values]);
 
   useEffect(() => {
     if (formFields.length > 0) {
@@ -50,11 +115,9 @@ const DynamicForm = ({
         if (field.required) {
           switch (field.type) {
             case "number":
-              const { min, max } = field.validation || {};
-              validationRules[field.id] = Yup.number()
-                .required(`${field.label} is required`)
-                .min(min || 0, `${field.label} must be at least ${min}`)
-                .max(max || Infinity, `${field.label} must be at most ${max}`);
+              validationRules[field.id] = Yup.number().required(
+                `${field.label} is required`
+              );
               break;
             case "text":
               validationRules[field.id] = Yup.string().required(
